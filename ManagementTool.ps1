@@ -58,7 +58,7 @@ function Get-Owner {
     PROCESS{
         foreach($mailbox in $mailboxes) {
             try {
-                $mbxOwner = Get-Mailbox $mailbox -ErrorAction Stop #-WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+                $mbxOwner = Get-Mailbox $mailbox -ErrorAction Stop
             }
             catch {
                 $mbxOwner = $false
@@ -77,7 +77,7 @@ function Get-Owner {
             }
             else {
                 try {
-                    $dgOwner = Get-DistributionGroup $mailbox -ErrorAction Stop #-WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+                    $dgOwner = Get-DistributionGroup $mailbox -ErrorAction Stop
                 }
                 catch {
                     [void]$warning.Add($mailbox) 
