@@ -1,7 +1,7 @@
 function Get-AddressType {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the address that you want to search for",ValueFromPipeline=$true,
+        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the mailbox whose type you want to look for",ValueFromPipeline=$true,
         ValueFromPipelineByPropertyName=$true)]
         [string[]]$mailboxes
     )
@@ -48,7 +48,7 @@ function Get-AddressType {
 function Get-Owner {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the address that you want to search the owner(s) for",ValueFromPipeline=$true,
+        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the mailbox you want to find the owner of",ValueFromPipeline=$true,
         ValueFromPipelineByPropertyName=$true)]
         [string[]]$mailboxes
     )
@@ -105,7 +105,7 @@ function Get-Owner {
 function Get-UserMailboxPermssions {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the mailaddress from the user that you want the permissions to find for",ValueFromPipeline=$true,
+        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the user whose rights you want to find",ValueFromPipeline=$true,
         ValueFromPipelineByPropertyName=$true)]
         [string]$user
     )
@@ -143,7 +143,7 @@ function Get-UserMailboxPermssions {
             $message = Read-Host "The outcome has been exported to ""$path"". Do you want to return to the menu? y"             
         }
         else {
-            $message = Read-Host "There are now results. Do you want to return to the menu? y"   
+            $message = Read-Host "No results were found. Do you want to return to the menu? y"   
         }
         
         Clear-Host
@@ -163,12 +163,12 @@ function Get-UserMailboxPermssions {
 function Add-Owner {
     [Cmdletbinding()]
     param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the mailaddress of the mailbox(es) that you want to enter the owner on.",ValueFromPipeline=$true,
+        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the mailbox(es) where you want to add the new owner",ValueFromPipeline=$true,
         ValueFromPipelineByPropertyName=$true)]
         [string[]]$mailboxes
     )
     BEGIN{
-        $user = Read-Host "Enter the mailaddress of the user that you want to make an owner."
+        $user = Read-Host "Enter the email address of the user you want to add as owner"
     }
     PROCESS{
         if ((Get-Mailbox -Identity $user)) {
@@ -190,7 +190,7 @@ function Add-Owner {
             }
         }
         else {
-            Write-Host "The mailaddress of the owner that you entered does not exist" -ForegroundColor Red
+            Write-Host "The email address of the owner you entered does not exist" -ForegroundColor Red
         }
         
     }
@@ -198,47 +198,66 @@ function Add-Owner {
 }
 
 function Replace-Owner {
-    [Cmdletbinding()]
-    param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the mailaddress of the mailbox(es) that you want to replace the owner off.",ValueFromPipeline=$true,
-        ValueFromPipelineByPropertyName=$true)]
-        [string[]]$mailboxes
-    )
+    param()
     BEGIN{
-        $old = Read-Host "Enter the mailaddress of the owner that you want to replace."
-        $new = Read-Host "Enter the mailaddress of the user that you want to make the owner."
+        $old = Read-Host "Enter the email address of the owner you want to replace"
+        $new = Read-Host "Enter the email address of the user you want to make the new owner"
+        
+        $mailboxes = @()
+        do {
+            $address = (Read-Host "Enter the email address of the mailbox(es) whose owner you want to replace")
+            if ($address -ne "") {
+                $mailboxes += $address
+            }
+        }
+        until ($address -eq "")
     }
     PROCESS{
-        if ((Get-Mailbox -Identity $new)) {
+        try {
+            $user = Get-Mailbox -Identity $new -ErrorAction Stop -WarningAction SilentlyContinue
+        }
+        catch {
+            Write-Warning "The email address of the owner $new does not exist"
+        }
+        if($user) {
             foreach($mailbox in $mailboxes) {
-                if((Get-Mailbox -Identity $mailbox)) {
-                    $CurrentOwners = (Get-Mailbox $mailbox)
+                try {
+                    $mbx = Get-Mailbox -Identity $mailbox -ErrorAction Stop
+                }
+                catch {
+                    Write-Warning "The email address of the mailbox $mailbox does not exist"
+                    continue
+                }
+                if($mbx) {
                     $OldOwner = $old.Split("@")[0]
                     $NewOwner = $new.Split("@")[0]
 
-                    $OwnerAttribute = $CurrentOwners.CustomAttribute1
-                    $FinalAttribute = $OwnerAttribute.Replace("$OldOwner","$NewOwner")
+                    $CurrentOwners = $mbx.CustomAttribute1
 
-                    Set-Mailbox $mailbox -CustomAttribute1 $FinalAttribute    
-                    Write-Host "The user $new has been added as owner of the mailbox $mailbox." -ForegroundColor Green
-                }
-                else {
-                    Write-Host "The mailbox $mailbox does not exist!" -ForegroundColor Red
+                    #comparison werkt niet. Deze nog nakijken zodat gekeken wordt of de oude eigenaar er reeds in staat.
+                    if($CurrentOwners -like $OldOwner) {
+                        $FinalAttribute = $CurrentOwners.Replace("$OldOwner","$NewOwner")
+    
+                        Set-Mailbox $mailbox -CustomAttribute1 $FinalAttribute    
+                        Write-Host "The user $new has replaced $old as new owner of the mailbox $mailbox" -ForegroundColor Green
+                    }
+                    else {
+                        $FinalAttribute = $CurrentOwners+";$NewOwner"
+
+                        Set-Mailbox $mailbox -CustomAttribute1 $FinalAttribute   
+                        Write-Host "The old owner $old was not precent. The new owner $new has been added as owner of the mailbox $mailbox" -ForegroundColor Yellow
+                    }
                 }
             }
         }
-        else {
-            Write-Host "The mailaddress of the new owner that you entered does not exist" -ForegroundColor Red
-        }
-        
-    }
+    }  
     END{}
 }
 
 function Get-MailboxPermissions {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the mailaddress that you want to search the permissions for")]
+        [Parameter(Mandatory=$true,HelpMessage="Enter the email address you want to search for")]
         [string[]]$addresses
     )
     
@@ -305,34 +324,48 @@ function Get-MailboxPermissions {
 }
 
 $menu = @"
-******************************************************************************
-Welcome into the management script! Make sure you are signed in into EXO!
+**********************************************************************************
+Welcome into the management script!
 
-**Know issues**
-When using option 1 and 2 and entering just 1 address there will be now
-result. Always enter 2 addresses. This could be the same as the first one.
+**Know issue**
+If only one address is entered in options 1 and 2, no result will be displayed. 
+Workaround is to enter the address twice.
+
 
 Make a selection...
 
-1 = Check address type
-2 = Check for the owner(s) of an address
-3 = Find all mailbox permissions for a specific user.
-4 = Check who has permissions on specific mailbox(es).
+1 = Check the address type
+2 = Check who owns a particular address
+3 = Find all mailbox rights for one specific user
+4 = Check the rights on one or more mailboxes
 5 = Add new mailbox owner
-6 = Replace a mailbox owner
+6 = Replace mailbox owner
 7 = Remove a mailbox owner
 8 = NEW!
 
-x = Exit this script
+x = Exit script
 
-******************************************************************************
+**********************************************************************************
 
 Enter your choice:
 "@
 
-function Start-Script {
-    [CmdletBinding()] 
+function Test-ExhangeConnection {
     param()
+    try {
+        Get-Mailbox -ResultSize 1 -ErrorAction Stop -WarningAction SilentlyContinue | Out-Null
+    }
+    catch {
+        Write-Warning "You are not connected to Exchange Online. Please sign in..."
+        Start-Sleep 2
+        Connect-ExchangeOnline
+    }
+}
+
+function Start-Tool {
+    [CmdletBinding()]
+    param()
+    Test-ExhangeConnection
 
     Do{
         #cmd /c color 71
@@ -368,7 +401,7 @@ function Start-Script {
                 pause
             }
             8 {
-                Write-Host "Still in development!"
+                Write-Host "Still in development! Suggestions? Mail them to GitHub@visione.nl"
                 pause
             }
             Default {
@@ -384,3 +417,4 @@ function Start-Script {
         Default {cmd /c color 56}
     }#>
 }
+Start-Tool
