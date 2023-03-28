@@ -1,12 +1,15 @@
 function Get-AddressType {
-    [CmdletBinding()]
-    Param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the mailbox whose type you want to look for",ValueFromPipeline=$true,
-        ValueFromPipelineByPropertyName=$true)]
-        [string[]]$mailboxes
-    )
+    Param()
     BEGIN{
         $warning = [System.Collections.ArrayList]::new()
+        $mailboxes = @()
+        do {
+            $address = (Read-Host "Enter the email address of the mailbox whose type you want to look for")
+            if ($address -ne "") {
+                $mailboxes += $address
+            }
+        }
+        until ($address -eq "")
     }
     PROCESS{
         foreach($mailbox in $mailboxes) {
@@ -46,14 +49,17 @@ function Get-AddressType {
 }
 
 function Get-Owner {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the mailbox you want to find the owner of",ValueFromPipeline=$true,
-        ValueFromPipelineByPropertyName=$true)]
-        [string[]]$mailboxes
-    )
+    param()
     BEGIN{
         $warning = [System.Collections.ArrayList]::new()
+        $mailboxes = @()
+        do {
+            $address = (Read-Host "Enter the email address of the mailbox you want to find the owner of")
+            if ($address -ne "") {
+                $mailboxes += $address
+            }
+        }
+        until ($address -eq "")
     }
     PROCESS{
         foreach($mailbox in $mailboxes) {
@@ -103,13 +109,10 @@ function Get-Owner {
 }   
 
 function Get-UserMailboxPermssions {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true,HelpMessage="Enter the email address of the user whose rights you want to find",ValueFromPipeline=$true,
-        ValueFromPipelineByPropertyName=$true)]
-        [string]$user
-    )
+    param()
     BEGIN{
+        $user = (Read-Host "Enter the email address of the user whose rights you want to find")
+
         Write-Host "Getting all mailboxes. This could take a while ;)" -ForegroundColor Green
         $mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails SharedMailbox,EquipmentMailbox,RoomMailbox | Select-Object PrimarySmtpAddress
         $total = $mailboxes.count
@@ -233,9 +236,9 @@ function Replace-Owner {
                     $NewOwner = $new.Split("@")[0]
 
                     $CurrentOwners = $mbx.CustomAttribute1
+                    $CurrentOwner = $CurrentOwners.Split(";")
 
-                    #comparison werkt niet. Deze nog nakijken zodat gekeken wordt of de oude eigenaar er reeds in staat.
-                    if($CurrentOwners -like $OldOwner) {
+                    if($CurrentOwner -contains $OldOwner) {
                         $FinalAttribute = $CurrentOwners.Replace("$OldOwner","$NewOwner")
     
                         Set-Mailbox $mailbox -CustomAttribute1 $FinalAttribute    
@@ -417,4 +420,3 @@ function Start-Tool {
         Default {cmd /c color 56}
     }#>
 }
-Start-Tool
