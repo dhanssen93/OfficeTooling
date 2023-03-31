@@ -1,22 +1,17 @@
 # Internal Exchange tool for simplifing dailey tasks
-This personal project aims to simplify daily tasks in my organization. In the meantime I hope to gain more experience in the field of PowerShell scripting and tool building.
 
 ## Table of Contents
 * [General Info](#general-information)
 * [Technologies Used](#technologies-used)
 * [Features](#features)
 * [Setup](#setup)
-* [Usage](#usage)
 * [Project Status](#project-status)
 * [Room for Improvement](#room-for-improvement)
 * [Contact](#contact)
 
 
 ## General Information
-- Provide general information about your project here.
-- What problem does it (intend to) solve?
-- What is the purpose of your project?
-- Why did you undertake it?
+This personal project aims to simplify daily tasks in my organization. In the meantime I hope to gain more experience in the field of PowerShell scripting and tool building.
 
 
 ## Technologies Used
@@ -28,23 +23,16 @@ This personal project aims to simplify daily tasks in my organization. In the me
 List the ready features here:
 - Find out the address type of a specific email address
 - Find out who is the owner of a specific mailbox, based on information in CustomAttribute1
-- Find out all rights of a user on mailboxes and distribution lists
+- Find out on which mailboxes a user has full access permission and of which distributionlistst the user is member of
 - Audit who has rights to specific mailboxes
-- Add a new owner to a mailbox
-- Replace a new owner to a mailbox
+- Add a new owner to a mailbox documented in CustomAttribute1
+- Replace an old owner with a new one on the mailbox documented in CustomAttribute1
 
 
 ## Setup
 What are the project requirements/dependencies? Where are they listed? A requirements.txt or a Pipfile.lock file perhaps? Where is it located?
 
 Proceed to describe how to install / setup one's local environment / get started with the project.
-
-
-## Usage
-How does one go about using it?
-Provide various use cases and code examples here.
-
-`write-your-code-here`
 
 
 ## Project Status
