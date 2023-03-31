@@ -1,33 +1,55 @@
 #import-module ImportExcel
 
-$StartMenu = @"
-**********************************************************************************
+function Show-Menu {
+    Clear-Host
+    Write-Host "**************************************************************************************"
+    Write-Host ""
+    Write-Host "Welcome into the management script!"
+    Write-Host ""
+    Write-Host "Make a choice..."
+    Write-Host ""
+    Write-Host "1 = Check the address type"
+    Write-Host "2 = Check who owns a particular address"
+    Write-Host "3 = Find all mailbox rights for one specific user"
+    Write-Host "4 = Check the rights on one or more mailboxes"
+    Write-Host "5 = Add new mailbox owner"
+    Write-Host "6 = Replace mailbox owner"
+    Write-Host "7 = NEW!"
+    Write-Host ""
+    Write-Host "x = Exit script"
+    Write-Host ""
+    Write-Host "**************************************************************************************"
+    Write-Host ""
+}
 
-Welcome into the management script!
+function Start-InputMenu {
+    Clear-Host
+    Write-Host "*************************** Provide the needed information ***************************"
+    Write-Host ""
+    Write-Host "$tip"
+    Write-Host ""
+}
 
-Make a choice...
-
-1 = Check the address type
-2 = Check who owns a particular address
-3 = Find all mailbox rights for one specific user
-4 = Check the rights on one or more mailboxes
-5 = Add new mailbox owner
-6 = Replace mailbox owner
-7 = NEW!
-
-x = Exit script
-
-**********************************************************************************
-
-Enter your choice
-"@
+function Test-ExchangeConnection {
+    try {
+        Get-Mailbox -ResultSize 1 -ErrorAction Stop -WarningAction SilentlyContinue | Out-Null
+    }
+    catch {
+        Write-Warning "You are not connected to Exchange Online. Please sign in..."
+        Start-Sleep 2
+        Connect-ExchangeOnline
+    }
+}
 
 function Get-AddressType {
     BEGIN{
+        Test-ExchangeConnection
+        $tip = "Here you can enter one or multiple mailboxes to find out of what type the specific address is. You can enter multiple addresses with one address on each line."
         $warning = [System.Collections.ArrayList]::new()
+        Start-InputMenu
         $mailboxes = @()
         do {
-            $address = (Read-Host "Enter the email address of the mailbox whose type you want to look for")
+            $address = (Read-Host "Enter an email address")
             if ($address -ne "") {
                 $mailboxes += $address
             }
@@ -75,10 +97,14 @@ function Get-AddressType {
 
 function Get-Owner {
     BEGIN{
+        Test-ExchangeConnection
+        $tip = "Here you can enter one or multiple mailboxes to check who are the owners of the specific address. You can enter multiple addresses with one address on each line."
         $warning = [System.Collections.ArrayList]::new()
+        Start-InputMenu
         $mailboxes = @()
         do {
-            $address = (Read-Host "Enter the email address of the mailbox you want to find the owner of")
+            
+            $address = (Read-Host "Enter an email address")
             if ($address -ne "") {
                 $mailboxes += $address
             }
@@ -136,15 +162,18 @@ function Get-Owner {
 
 function Get-UserMailboxPermssions {
     BEGIN{
-        $user = (Read-Host "Enter the email address of the user whose rights you want to find")
-
+        Test-ExchangeConnection
+        $tip = "Fill in the email address of the user that you want to find the permissions for. You can only search for the permissions for one user."
+        Start-InputMenu
+        $user = (Read-Host "Enter an email address")
+    }
+    PROCESS{
         Write-Host "Getting all mailboxes. This could take a while ;)" -ForegroundColor Green
         $mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails SharedMailbox,EquipmentMailbox,RoomMailbox | Select-Object PrimarySmtpAddress
         $total = $mailboxes.count
         $current = 1
         $percentage = 0
-    }
-    PROCESS{
+
         foreach($mailbox in $mailboxes) {
             Write-Progress -Activity "Checking for permissions" -Status "$Percentage% Complete:" -PercentComplete $percentage
             $current++
@@ -177,7 +206,8 @@ function Get-UserMailboxPermssions {
         Clear-Host
         switch ($message) {
             y {
-                $selection  
+                $selection
+                pause  
             }
             Default {
                 Write-Host "That is not a valid selection. Try again." -ForegroundColor Red
@@ -190,15 +220,20 @@ function Get-UserMailboxPermssions {
 
 function Add-Owner {
     BEGIN{
+        Test-ExchangeConnection
+        $tip = "Here you can add a new owner to one or more mailboxes. You can enter multiple addresses with one address on each line."
+        Start-InputMenu
         $mailboxes = @()
         do {
-            $address = (Read-Host "Enter the email address of the mailbox(es) where you want to add the new owner")
+            $address = (Read-Host "Enter an email address")
             if ($address -ne "") {
                 $mailboxes += $address
             }
         }
         until ($address -eq "")
-        $user = Read-Host "Enter the email address of the user you want to add as owner"
+        $tip = "Fill in the email address of the user that you want to add as owner. This can be only one address."
+        Start-InputMenu
+        $user = (Read-Host "Enter an email address")
     }
     PROCESS{
         try {
@@ -238,14 +273,22 @@ function Add-Owner {
     END{}
 }
 
-function Replace-Owner {
+function Switch-Owner {
     BEGIN{
-        $old = Read-Host "Enter the email address of the owner you want to replace"
-        $new = Read-Host "Enter the email address of the user you want to make the new owner"
+        Test-ExchangeConnection
+        $tip = "Enter the email address of the owner that you want to replace on one or more mailboxes. You can only enter one address"
+        Start-InputMenu       
+        $old = (Read-Host "Enter an email address")
+
+        $tip = "Enter the email address of the owner that you want to make the new owner. You can only enter one address"
+        Start-InputMenu
+        $new = (Read-Host "Enter an email address")
         
+        $tip = "Enter one or more email addresses of the mailboxes that you want to replace the owner of. You can enter multiple addresses with one address on each line."
+        Start-InputMenu
         $mailboxes = @()
         do {
-            $address = (Read-Host "Enter the email address of the mailbox(es) whose owner you want to replace")
+            $address = (Read-Host "Enter an email address")
             if ($address -ne "") {
                 $mailboxes += $address
             }
@@ -295,36 +338,32 @@ function Replace-Owner {
 }
 
 function Get-MailboxPermissions {
-        $addresses = @()
-        do {
-            $address = (Read-Host "Enter the email address you want to search for")
-            if ($address -ne "") {
-                $addresses += $address
-            }
+    Test-ExchangeConnection
+
+    $tip = "Enter one or more addresses that you want to find the users with permissions for. You can enter multiple addresses with one address on each line."
+    Start-InputMenu
+    $addresses = @()
+    do {
+        $address = (Read-Host "Enter an email address")
+        if ($address -ne "") {
+            $addresses += $address
         }
-        until ($address -eq "")
+    }
+    until ($address -eq "")
     
     foreach($address in $addresses) {
-
         if((Get-mailbox $address)) {
             $FullAccess = Get-MailboxPermission $address | Where-object {$_.User -ne "NT AUTHORITY\SELF"}
             $SendAs = Get-RecipientPermission $address | Where-object {$_.Trustee -ne "NT AUTHORITY\SELF"}
             $FolderPermissions = Get-MailboxFolderPermission $address | Where-object {$_.User -notlike "Default" -and $_.User -notlike "Anonymous"} | Select-object User,AccessRights
 
             foreach($user in $FullAccess) {
-                #new to test export-to-excel
-                $data = ConvertFrom-Csv @"
-                Address,Type,Rights,Member
-                $address,Mailbox,FullAccess,$user.user
-"@
-                $data | Export-Excel .\test.xslx -WorksheetName "Test" -Append
-
-                <#[PSCustomObject] @{
+                [PSCustomObject] @{
                     Address = $address
                     Type = "Mailbox"
                     Rights = "FullAccess"
                     Member = $user.User
-                }#>
+                } | Export-Excel .\ExportRights.xslx -WorksheetName "FullAccess" -Append
             }
             foreach($user in $SendAs) {
                 [PSCustomObject] @{
@@ -332,7 +371,7 @@ function Get-MailboxPermissions {
                     Type = "Mailbox"
                     Rights = "SendAs"
                     Member = $user.Trustee
-                }
+                } | Export-Excel .\ExportRights.xslx -WorksheetName "SendAs" -Append
             }
             foreach($user in $FolderPermissions) {
                 $gebruikers = $user.User.Displayname
@@ -343,7 +382,7 @@ function Get-MailboxPermissions {
                     Type = "Mailbox"
                     Rights = $user.AccessRights
                     Member = $UserMail.PrimarySmtpAddress
-                }
+                } | Export-Excel .\ExportRights.xslx -WorksheetName "FolderPermission" -Append
             }
         }
         elseif((Get-DistributionGroup $address)) {
@@ -357,38 +396,40 @@ function Get-MailboxPermissions {
                     Type = "DistributionGroup"
                     Rights = "This is an member"
                     Member = $UserMail.PrimarySmtpAddress
-                }
+                } | Export-Excel .\ExportRights.xslx -WorksheetName "Distributionlist" -Append
             }
         }
         else {
-            Write-Host "$address does not exist!"
-
-            [PSCustomObject] @{
-                Address = $address
-                Type = "Address does not exist"
-                Rights = "Address does not exist"
-                Member = "Address does not exist"
+            Write-Warning "$address does not exist!"
+        }
+        
+        [string]$path = ($loc = Get-Location)
+        $check = Get-Childitem -Directory $path"\ExportRights.xslx" -ErrorAction SilentlyContinue
+        if($check) {
+            $message = Read-Host "The outcome has been exported to ""$path"". Do you want to return to the menu? y"             
+        }
+        else {
+            $message = Read-Host "No results have been found. Do you want to return to the menu? y"   
+        }
+        Clear-Host
+        switch ($message) {
+            y {
+                $selection
+                pause  
+            }
+            Default {
+                Write-Host "That is not a valid selection. Try again." -ForegroundColor Red
+                pause
             }
         }
     }
 }
 
 function Start-Tool {
-    function Test-ExhangeConnection {
-        try {
-            Get-Mailbox -ResultSize 1 -ErrorAction Stop -WarningAction SilentlyContinue | Out-Null
-        }
-        catch {
-            Write-Warning "You are not connected to Exchange Online. Please sign in..."
-            Start-Sleep 2
-            Connect-ExchangeOnline
-        }
-    }
-    Test-ExhangeConnection
-
     Do{
         #cmd /c color 71
-        $selection = Read-Host -Prompt $StartMenu
+        Show-Menu
+        $selection = Read-Host "Enter your choice"
         Clear-Host
         switch ($selection) {
             1 {
@@ -412,7 +453,7 @@ function Start-Tool {
                 pause
             }
             6 {
-                Replace-Owner
+                Switch-Owner
                 pause
             }
             7 {

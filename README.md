@@ -42,14 +42,14 @@ Project is a work in progress.
 ## Room for Improvement
 
 Room for improvement:
-- Introduce try-catch in the function Add-Owner
-- Change the advanced function Get-MailboxPermissions to a normal function
+- Introduce try-catch where possible
 - Fix to remove ; at the beginnig of CustomAttribute1 when present
+- Get-UserMailboxPermssions needs a check on if an address is filled in
 
 To do:
-- Commited the script
-- Introduce new functions depending of the need
+- Add comment to the script
+- Introduce new functions depending of the needs
 
 
 ## Contact
-Created by D. Hanssen > GitHub@visione.nl - feel free to contact me!
+Created by D. Hanssen > GitHub@visione.nl - feel free to contact me for any tips or suggestions!
