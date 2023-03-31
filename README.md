@@ -52,14 +52,11 @@ Project is a work in progress.
 
 
 ## Room for Improvement
-1. Commited the script
-2. Introduce try-catch in the function Add-Owner
-3. Change the advanced function Get-MailboxPermissions to a normal function
-4. Introduce new functions depending of the need
 
 Room for improvement:
 - Introduce try-catch in the function Add-Owner
 - Change the advanced function Get-MailboxPermissions to a normal function
+- Fix to remove ; at the beginnig of CustomAttribute1 when present
 
 To do:
 - Commited the script
