@@ -49,6 +49,7 @@ Room for improvement:
 To do:
 - Add comment to the script
 - Introduce new functions depending of the needs
+- Fix bug where going to the menu doesn't work when using Get-MailboxPermissions
 
 
 ## Contact
