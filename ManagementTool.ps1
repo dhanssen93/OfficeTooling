@@ -1,3 +1,5 @@
+#import-module ImportExcel
+
 $StartMenu = @"
 **********************************************************************************
 
@@ -310,12 +312,19 @@ function Get-MailboxPermissions {
             $FolderPermissions = Get-MailboxFolderPermission $address | Where-object {$_.User -notlike "Default" -and $_.User -notlike "Anonymous"} | Select-object User,AccessRights
 
             foreach($user in $FullAccess) {
-                [PSCustomObject] @{
+                #new to test export-to-excel
+                $data = ConvertFrom-Csv @"
+                Address,Type,Rights,Member
+                $address,Mailbox,FullAccess,$user.user
+"@
+                $data | Export-Excel .\test.xslx -WorksheetName "Test" -Append
+
+                <#[PSCustomObject] @{
                     Address = $address
                     Type = "Mailbox"
                     Rights = "FullAccess"
                     Member = $user.User
-                } 
+                }#>
             }
             foreach($user in $SendAs) {
                 [PSCustomObject] @{
