@@ -1,5 +1,3 @@
-#import-module ImportExcel
-
 function Show-Menu {
     Clear-Host
     Write-Host "**************************************************************************************"
@@ -44,7 +42,7 @@ function Test-ExchangeConnection {
 function Get-AddressType {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Here you can enter one or multiple mailboxes to find out of what type the specific address is. You can enter multiple addresses with one address on each line."
+        $tip = "Here you can enter one or multiple mailboxes to find out of what type the specific`naddress is. You can enter multiple addresses with one address on each line."
         $warning = [System.Collections.ArrayList]::new()
         Start-InputMenu
         $mailboxes = @()
@@ -98,7 +96,7 @@ function Get-AddressType {
 function Get-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Here you can enter one or multiple mailboxes to check who are the owners of the specific address. You can enter multiple addresses with one address on each line."
+        $tip = "Here you can enter one or multiple mailboxes to check who are the owners of the`nspecific address. You can enter multiple addresses with one address on each line."
         $warning = [System.Collections.ArrayList]::new()
         Start-InputMenu
         $mailboxes = @()
@@ -163,7 +161,7 @@ function Get-Owner {
 function Get-UserMailboxPermssions {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Fill in the email address of the user that you want to find the permissions for. You can only search for the permissions for one user."
+        $tip = "Fill in the email address of the user that you want to find the permissions for.`nYou can only search for the permissions for one user."
         Start-InputMenu
         $user = (Read-Host "Enter an email address")
     }
@@ -221,7 +219,7 @@ function Get-UserMailboxPermssions {
 function Add-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Here you can add a new owner to one or more mailboxes. You can enter multiple addresses with one address on each line."
+        $tip = "Here you can add a new owner to one or more mailboxes. You can enter multiple`naddresses with one address on each line."
         Start-InputMenu
         $mailboxes = @()
         do {
@@ -231,7 +229,7 @@ function Add-Owner {
             }
         }
         until ($address -eq "")
-        $tip = "Fill in the email address of the user that you want to add as owner. This can be only one address."
+        $tip = "Fill in the email address of the user that you want to add as owner. This can be`nonly one address."
         Start-InputMenu
         $user = (Read-Host "Enter an email address")
     }
@@ -276,15 +274,15 @@ function Add-Owner {
 function Switch-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Enter the email address of the owner that you want to replace on one or more mailboxes. You can only enter one address"
+        $tip = "Enter the email address of the owner that you want to replace on one or more`nmailboxes. You can only enter one address"
         Start-InputMenu       
         $old = (Read-Host "Enter an email address")
 
-        $tip = "Enter the email address of the owner that you want to make the new owner. You can only enter one address"
+        $tip = "Enter the email address of the owner that you want to make the new owner. You can`nonly enter one address"
         Start-InputMenu
         $new = (Read-Host "Enter an email address")
         
-        $tip = "Enter one or more email addresses of the mailboxes that you want to replace the owner of. You can enter multiple addresses with one address on each line."
+        $tip = "Enter one or more email addresses of the mailboxes that you want to replace the`nowner of. You can enter multiple addresses with one address on each line."
         Start-InputMenu
         $mailboxes = @()
         do {
@@ -340,7 +338,7 @@ function Switch-Owner {
 function Get-MailboxPermissions {
     Test-ExchangeConnection
 
-    $tip = "Enter one or more addresses that you want to find the users with permissions for. You can enter multiple addresses with one address on each line."
+    $tip = "Enter one or more addresses that you want to find the users with permissions for.`nYou can enter multiple addresses with one address on each line."
     Start-InputMenu
     $addresses = @()
     do {
