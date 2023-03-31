@@ -189,12 +189,12 @@ function Get-UserMailboxPermssions {
                 [PSCustomObject]@{
                     Mailbox = $mbx
                     User = $user
-                } | Export-Csv .\Search_Result.csv -Delimiter ";" -Append -NoTypeInformation     
+                } | Export-Excel .\Search_Result.xslx -Append
                 $outcome
             }
         }
         [string]$path = ($loc = Get-Location)
-        $check = Get-Childitem -Directory $path"\Search_Result.csv" -ErrorAction SilentlyContinue
+        $check = Get-Childitem -Directory $path"\Search_Result.xslx" -ErrorAction SilentlyContinue
 
         if($check) {
             $message = Read-Host "The outcome has been exported to ""$path"". Do you want to return to the menu? y"             
@@ -206,7 +206,7 @@ function Get-UserMailboxPermssions {
         Clear-Host
         switch ($message) {
             y {
-                $selection
+                Start-Tool
                 pause  
             }
             Default {
