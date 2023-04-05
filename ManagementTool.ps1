@@ -1,3 +1,7 @@
+#Start data
+$location = "C:\Users\$env:Username\Desktop"
+$date = (Get-Date -Format dd/MM/yyyy).Replace("-","") 
+
 function Show-Menu {
     Clear-Host
     Write-Host "**************************************************************************************"
@@ -12,7 +16,8 @@ function Show-Menu {
     Write-Host "4 = Check the rights on one or more mailboxes"
     Write-Host "5 = Add new mailbox owner"
     Write-Host "6 = Replace mailbox owner"
-    Write-Host "7 = NEW!"
+    Write-Host "7 = Get the size of one or more mailboxes and calculate the total"
+    Write-Host "8 = NEW!"    
     Write-Host ""
     Write-Host "x = Exit script"
     Write-Host ""
@@ -24,7 +29,7 @@ function Start-InputMenu {
     Clear-Host
     Write-Host "*************************** Provide the needed information ***************************"
     Write-Host ""
-    Write-Host "$tip"
+    Write-Host "$description"
     Write-Host ""
 }
 
@@ -42,7 +47,7 @@ function Test-ExchangeConnection {
 function Get-AddressType {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Here you can enter one or multiple mailboxes to find out of what type the specific`naddress is. You can enter multiple addresses with one address on each line."
+        $description = "Here you can enter one or multiple mailboxes to find out of what type the specific`naddress is. You can enter multiple addresses with one address on each line."
         $warning = [System.Collections.ArrayList]::new()
         Start-InputMenu
         $mailboxes = @()
@@ -96,7 +101,7 @@ function Get-AddressType {
 function Get-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Here you can enter one or multiple mailboxes to check who are the owners of the`nspecific address. You can enter multiple addresses with one address on each line."
+        $description = "Here you can enter one or multiple mailboxes to check who are the owners of the`nspecific address. You can enter multiple addresses with one address on each line."
         $warning = [System.Collections.ArrayList]::new()
         Start-InputMenu
         $mailboxes = @()
@@ -161,7 +166,8 @@ function Get-Owner {
 function Get-UserMailboxPermssions {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Fill in the email address of the user that you want to find the permissions for.`nYou can only search for the permissions for one user."
+        $description = "Fill in the email address of the user that you want to find the permissions for.`nYou can only search for the permissions for one user."
+        $name = "UserMailboxPermissions"+"_"+"$date"
         Start-InputMenu
         $user = (Read-Host "Enter an email address")
     }
@@ -187,15 +193,13 @@ function Get-UserMailboxPermssions {
                 [PSCustomObject]@{
                     Mailbox = $mbx
                     User = $user
-                } | Export-Excel .\Search_Result.xslx -Append
+                } | Export-Excel "$location\$name.xslx" -BoldTopRow -Append -AutoSize
                 $outcome
             }
         }
-        [string]$path = ($loc = Get-Location)
-        $check = Get-Childitem -Directory $path"\Search_Result.xslx" -ErrorAction SilentlyContinue
-
+        $check = Get-Childitem -Directory "$location\$name.xslx" -ErrorAction SilentlyContinue
         if($check) {
-            $message = Read-Host "The outcome has been exported to ""$path"". Do you want to return to the menu? y"             
+            $message = Read-Host "The results have been exported to"$location\$name.xslx". Do you want to return to the menu? y"             
         }
         else {
             $message = Read-Host "No results were found. Do you want to return to the menu? y"   
@@ -204,8 +208,7 @@ function Get-UserMailboxPermssions {
         Clear-Host
         switch ($message) {
             y {
-                Start-Tool
-                pause  
+                Start-Tool  
             }
             Default {
                 Write-Host "That is not a valid selection. Try again." -ForegroundColor Red
@@ -219,7 +222,7 @@ function Get-UserMailboxPermssions {
 function Add-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Here you can add a new owner to one or more mailboxes. You can enter multiple`naddresses with one address on each line."
+        $description = "Here you can add a new owner to one or more mailboxes. You can enter multiple`naddresses with one address on each line."
         Start-InputMenu
         $mailboxes = @()
         do {
@@ -229,7 +232,7 @@ function Add-Owner {
             }
         }
         until ($address -eq "")
-        $tip = "Fill in the email address of the user that you want to add as owner. This can be`nonly one address."
+        $description = "Fill in the email address of the user that you want to add as owner. This can be`nonly one address."
         Start-InputMenu
         $user = (Read-Host "Enter an email address")
     }
@@ -274,15 +277,15 @@ function Add-Owner {
 function Switch-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $tip = "Enter the email address of the owner that you want to replace on one or more`nmailboxes. You can only enter one address"
+        $description = "Enter the email address of the owner that you want to replace on one or more`nmailboxes. You can only enter one address"
         Start-InputMenu       
         $old = (Read-Host "Enter an email address")
 
-        $tip = "Enter the email address of the owner that you want to make the new owner. You can`nonly enter one address"
+        $description = "Enter the email address of the owner that you want to make the new owner. You can`nonly enter one address"
         Start-InputMenu
         $new = (Read-Host "Enter an email address")
         
-        $tip = "Enter one or more email addresses of the mailboxes that you want to replace the`nowner of. You can enter multiple addresses with one address on each line."
+        $description = "Enter one or more email addresses of the mailboxes that you want to replace the`nowner of. You can enter multiple addresses with one address on each line."
         Start-InputMenu
         $mailboxes = @()
         do {
@@ -337,8 +340,8 @@ function Switch-Owner {
 
 function Get-MailboxPermissions {
     Test-ExchangeConnection
-
-    $tip = "Enter one or more addresses that you want to find the users with permissions for.`nYou can enter multiple addresses with one address on each line."
+    $description = "Enter one or more addresses that you want to find the users with permissions for.`nYou can enter multiple addresses with one address on each line."
+    $name = "MailboxPermissions"+"_"+"$date"
     Start-InputMenu
     $addresses = @()
     do {
@@ -349,6 +352,7 @@ function Get-MailboxPermissions {
     }
     until ($address -eq "")
     
+    # Add try and catch
     foreach($address in $addresses) {
         if((Get-mailbox $address)) {
             $FullAccess = Get-MailboxPermission $address | Where-object {$_.User -ne "NT AUTHORITY\SELF"}
@@ -361,7 +365,7 @@ function Get-MailboxPermissions {
                     Type = "Mailbox"
                     Rights = "FullAccess"
                     Member = $user.User
-                } | Export-Excel .\ExportRights.xslx -WorksheetName "FullAccess" -Append
+                } | Export-Excel "$location\$name.xslx" -WorksheetName "FullAccess" -BoldTopRow  -Append -AutoSize
             }
             foreach($user in $SendAs) {
                 [PSCustomObject] @{
@@ -369,7 +373,7 @@ function Get-MailboxPermissions {
                     Type = "Mailbox"
                     Rights = "SendAs"
                     Member = $user.Trustee
-                } | Export-Excel .\ExportRights.xslx -WorksheetName "SendAs" -Append
+                } | Export-Excel "$location\$name.xslx" -WorksheetName "SendAs" -BoldTopRow -Append -AutoSize
             }
             foreach($user in $FolderPermissions) {
                 $gebruikers = $user.User.Displayname
@@ -380,7 +384,7 @@ function Get-MailboxPermissions {
                     Type = "Mailbox"
                     Rights = $user.AccessRights
                     Member = $UserMail.PrimarySmtpAddress
-                } | Export-Excel .\ExportRights.xslx -WorksheetName "FolderPermission" -Append
+                } | Export-Excel "$location\$name.xslx" -WorksheetName "FolderPermission" -BoldTopRow -Append -AutoSize
             }
         }
         elseif((Get-DistributionGroup $address)) {
@@ -394,26 +398,109 @@ function Get-MailboxPermissions {
                     Type = "DistributionGroup"
                     Rights = "This is an member"
                     Member = $UserMail.PrimarySmtpAddress
-                } | Export-Excel .\ExportRights.xslx -WorksheetName "Distributionlist" -Append
+                } | Export-Excel "$location\$name.xslx" -WorksheetName "Distributionlist" -BoldTopRow -Append -AutoSize
             }
         }
         else {
             Write-Warning "$address does not exist!"
         }
-        
-        [string]$path = ($loc = Get-Location)
-        $check = Get-Childitem -Directory $path"\ExportRights.xslx" -ErrorAction SilentlyContinue
-        if($check) {
-            $message = Read-Host "The outcome has been exported to ""$path"". Do you want to return to the menu? y"             
+    }
+    $check = Get-Childitem -Directory "$location\$name.xslx" -ErrorAction SilentlyContinue
+    if($check) {
+        $message = Read-Host "The results have been exported to"$location\$name".`nDo you want to return to the menu? y"             
+    }
+    else {
+        $message = Read-Host "No results have been found. Do you want to return to the menu? y"   
+    }
+    Clear-Host
+    switch ($message) {
+        y {
+            Start-Tool
+            #pause
         }
-        else {
-            $message = Read-Host "No results have been found. Do you want to return to the menu? y"   
+        Default {
+            Write-Host "That is not a valid selection. Try again." -ForegroundColor Red
+            pause
+        }
+    }
+}
+
+function Get-MailboxSizes { 
+    Begin{
+        Test-ExchangeConnection
+        $description = "Enter one or more mailboxes where you would like to export the mailboxsize of.`nThe results will be exported to an Excel file."
+        $name = "MailboxSizes"+"_"+"$date"
+        Start-InputMenu
+        $mailboxes = @()
+        do{
+            $address = (Read-Host "Enter the mailbox")
+            if($address -ne "") {
+                $mailboxes += $address
+            }
+        }
+        Until($address -eq "")
+    }
+    Process{
+        foreach($mailbox in $mailboxes) {
+            try {
+                $mbx = Get-Mailbox -Identity $mailbox -ErrorAction Stop
+            }
+            catch {
+                $mbx = $false
+            }
+            if($mbx) {
+                $ItemSize  = Get-MailboxStatistics -Identity $mailbox | Select-Object TotalItemSize
+                $StringItemSize = $ItemSize.TotalItemSize.Value.ToString()
+                $ReplaceItemSize = $StringItemSize -replace "^\d{1,3}.\d{1,3}\s\w{1,2}\s.",""
+                $FinalItemSize = $ReplaceItemSize -replace "\s\w{1,5}.$",""
+                $FinalSizeMB = [math]::round([int64]$FinalItemSize/1MB, 2)
+                $FinalSizeGB = [math]::round([int64]$FinalItemSize/1GB, 2)
+
+                #Counter for total
+                $TotalSize += [int64]$FinalItemSize
+
+                [PSCustomObject] @{
+                    Mailbox = $mbx.PrimarySMTPAddress
+                    Size_MB = $FinalSizeMB
+                    Size_GB = $FinalSizeGB
+                } | Export-Excel "$location\$name.xslx" -BoldTopRow -Append -AutoFilter -AutoSize
+            }
+            else {
+                try {
+                    $dg = Get-DistributionGroup -Identity $mailbox -ErrorAction Stop
+                }
+                catch {
+                    Write-Warning "The email address $mailbox does not exist as a mailbox or distributiongroup."
+                }
+                if($dg) {
+                    Write-Host "The email address $mailbox is a distributiongroup. This search does only work for mailboxes." -ForegroundColor Red 
+                }
+            }
+        }
+        $TotalMB = [math]::round($TotalSize/1MB, 2)
+        $TotalGB = [math]::round($TotalSize/1GB, 2)
+        
+        [PSCustomObject] @{
+            Mailbox = "Total"
+            Size_MB = $TotalMB
+            Size_GB = $TotalGB
+        } | Export-Excel "$location\$name.xslx" -BoldTopRow -Append -AutoFilter -AutoSize 
+        
+        try {
+            $check = Get-Childitem -Directory "$location\$name.xslx" -ErrorAction SilentlyContinue
+        }
+        catch {
+            $message = Read-Host "No results have been found. Do you want to return to the menu? y"
+            $check = $false 
+        }
+        if($check) {
+            $message = Read-Host "The results have been exported to"$location\$name". `nDo you want to return to the menu? y"   
         }
         Clear-Host
         switch ($message) {
             y {
-                $selection
-                pause  
+                Start-Tool
+                pause
             }
             Default {
                 Write-Host "That is not a valid selection. Try again." -ForegroundColor Red
@@ -421,11 +508,13 @@ function Get-MailboxPermissions {
             }
         }
     }
+    End{}
 }
 
 function Start-Tool {
     Do{
         #cmd /c color 71
+        Import-Excel
         Show-Menu
         $selection = Read-Host "Enter your choice"
         Clear-Host
@@ -455,6 +544,10 @@ function Start-Tool {
                 pause
             }
             7 {
+                Get-MailboxSizes
+                pause
+            }
+            8 {
                 Write-Host "Still in development! Suggestions? Mail them to GitHub@visione.nl"
                 pause
             }
