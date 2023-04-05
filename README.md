@@ -50,7 +50,6 @@ Project is a work in progress.
 - Introduce try-catch where possible
 - Add comment to the script
 - Better menu for specific subjects
-- Get-UserMailboxPermssions needs a check on if an address is filled in
 - Fix to remove ; at the beginnig of CustomAttribute1 when present
 
 

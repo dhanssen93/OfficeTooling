@@ -172,37 +172,53 @@ function Get-UserMailboxPermssions {
         $user = (Read-Host "Enter an email address")
     }
     PROCESS{
-        Write-Host "Getting all mailboxes. This could take a while ;)" -ForegroundColor Green
-        $mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails SharedMailbox,EquipmentMailbox,RoomMailbox | Select-Object PrimarySmtpAddress
-        $total = $mailboxes.count
-        $current = 1
-        $percentage = 0
+        if($user -ne "") {
+            try {
+                $found = Get-Mailbox -Identity $user -ErrorAction Stop | Out-Null
+            }
+            catch {
+                $found = $false
+            }
+            if($found) {
+                Write-Host "Getting all mailboxes. This could take a while ;)" -ForegroundColor Green
+                $mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails SharedMailbox,EquipmentMailbox,RoomMailbox | Select-Object PrimarySmtpAddress
+                $total = $mailboxes.count
+                $current = 1
+                $percentage = 0
 
-        foreach($mailbox in $mailboxes) {
-            Write-Progress -Activity "Checking for permissions" -Status "$Percentage% Complete:" -PercentComplete $percentage
-            $current++
-            $percentage = [int](($current / $total) * 100)
-            
-            $mbx = $mailbox.PrimarySmtpAddress
+                foreach($mailbox in $mailboxes) {
+                    Write-Progress -Activity "Checking for permissions" -Status "$Percentage% Complete:" -PercentComplete $percentage
+                    $current++
+                    $percentage = [int](($current / $total) * 100)
+                    
+                    $mbx = $mailbox.PrimarySmtpAddress
 
-            $rights = ""
-            $rights = Get-MailboxPermission -Identity $mbx | Where-Object {$_.user -eq "$user"} 
+                    $rights = ""
+                    $rights = Get-MailboxPermission -Identity $mbx | Where-Object {$_.user -eq "$user"} 
 
-            if($rights) {
-                $outcome = `
-                [PSCustomObject]@{
-                    Mailbox = $mbx
-                    User = $user
-                } | Export-Excel "$location\$name.xslx" -BoldTopRow -Append -AutoSize
-                $outcome
+                    if($rights) {
+                        $outcome = `
+                        [PSCustomObject]@{
+                            Mailbox = $mbx
+                            User = $user
+                        } | Export-Excel "$location\$name.xslx" -BoldTopRow -Append -AutoSize
+                        $outcome
+                    }
+                }
+                $check = Get-Childitem -Directory "$location\$name.xslx" -ErrorAction SilentlyContinue
+                if($check) {
+                    $message = Read-Host "The results have been exported to"$location\$name.xslx". Do you want to return to the menu? y"             
+                }
+                else {
+                    $message = Read-Host "No results were found. Do you want to return to the menu? y"   
+                }
+            }
+            else {
+                $message = Read-Host "This email address does not exist. Go back to the menu and try again white a valid`nemail address.`n`nPress y to go to the menu."
             }
         }
-        $check = Get-Childitem -Directory "$location\$name.xslx" -ErrorAction SilentlyContinue
-        if($check) {
-            $message = Read-Host "The results have been exported to"$location\$name.xslx". Do you want to return to the menu? y"             
-        }
         else {
-            $message = Read-Host "No results were found. Do you want to return to the menu? y"   
+            $message = Read-Host "No email address has been entered. Go back to the menu and try again.`n`nPress y to go to the menu."
         }
         
         Clear-Host
