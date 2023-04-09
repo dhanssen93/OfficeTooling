@@ -98,7 +98,7 @@ function Get-AddressType {
     END{}
 }
 
-function Get-Owner {
+<#function Get-Owner {
     BEGIN{
         Test-ExchangeConnection
         $description = "Here you can enter one or multiple mailboxes to check who are the owners of the`nspecific address. You can enter multiple addresses with one address on each line."
@@ -161,7 +161,73 @@ function Get-Owner {
         }
     }
     END{}
-}   
+}#>
+
+function Get-Owner {
+    BEGIN{
+        Test-ExchangeConnection
+        $description = "Here you can enter one or multiple mailboxes to check who are the owners of the`nspecific address. You can enter multiple addresses with one address on each line."
+        $warning = [System.Collections.ArrayList]::new()
+        Start-InputMenu
+        $mailboxes = @()
+        do {
+            
+            $address = (Read-Host "Enter an email address")
+            if ($address -ne "") {
+                $mailboxes += $address
+            }
+        }
+        until ($address -eq "")
+    }
+    PROCESS{
+        foreach($mailbox in $mailboxes) {
+            try {
+                $mbxOwner = Get-Mailbox $mailbox -ErrorAction Stop
+            }
+            catch {
+                $mbxOwner = $false
+            }
+            if($mbxOwner) {
+                if($mbxOwner.CustomAttribute1 -eq "") {
+                    $address = $mbxOwner.PrimarySmtpAddress
+                    $type = "Mailbox"
+                    $results = "Unknown"
+                }
+                else {
+                    $owners = $mbxOwner.CustomAttribute1 -replace ";",", "
+                    $address = $mbxOwner.PrimarySmtpAddress
+                    $type = "Mailbox"
+                    $results = $owners 
+                }
+            }
+            else {
+                try {
+                    $dgOwner = Get-DistributionGroup $mailbox -ErrorAction Stop
+                }
+                catch {
+                    [void]$warning.Add($mailbox) 
+                    continue 
+                }
+                if($dgOwner) {
+                    $address = $dgOwner.PrimarySmtpAddress
+                    $type = "Distributiongroup"
+                    $results = [string]$dgOwner.ManagedBy
+                }
+            }
+            $output = @{
+                PrimarySmtpAddress = $address
+                Type = $type
+                Owner = $results
+            }
+            $outcome = New-Object -TypeName psobject -Property $output
+            Write-Output $outcome        
+        }
+        foreach($warn in $warning) {
+            Write-Warning "The following mailbox does not exist: $warn!"   
+        }
+    }
+    END{}
+}
 
 function Get-UserMailboxPermssions {
     BEGIN{
@@ -273,7 +339,8 @@ function Add-Owner {
 
                     $OwnerAttribute     = $CurrentOwners.CustomAttribute1
                     $NewOwnerAttribute  = $OwnerAttribute+";$owner"
-                    $FinalAttribute     = $NewOwnerAttribute.Replace(";;",";")
+                    $FixAttribute       = $NewOwnerAttribute -replace "^[;]",""
+                    $FinalAttribute     = $FixAttribute.Replace(";;",";")
 
                     Set-Mailbox $mailbox -CustomAttribute1 $FinalAttribute
                     Write-Host "The user $user has been added as owner of the mailbox $mailbox" -ForegroundColor Green
@@ -336,7 +403,7 @@ function Switch-Owner {
                     $CurrentOwner = $CurrentOwners.Split(";")
 
                     if($CurrentOwner -contains $OldOwner) {
-                        $FinalAttribute = $CurrentOwners.Replace("$OldOwner","$NewOwner")
+                        $ReplaceAttribute = $CurrentOwners.Replace("$OldOwner","$NewOwner")
     
                         Set-Mailbox $mailbox -CustomAttribute1 $FinalAttribute    
                         Write-Host "The user $new has replaced $old as new owner of the mailbox $mailbox" -ForegroundColor Green
