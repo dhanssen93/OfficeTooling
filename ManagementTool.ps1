@@ -4,6 +4,7 @@ $date = (Get-Date -Format dd/MM/yyyy).Replace("-","")
 
 function Show-Menu {
     Clear-Host
+    Write-Host ""
     Write-Host "**************************************************************************************"
     Write-Host ""
     Write-Host "Welcome into the management script!"
@@ -27,6 +28,7 @@ function Show-Menu {
 
 function Start-InputMenu {
     Clear-Host
+    Write-Host ""
     Write-Host "*************************** Provide the needed information ***************************"
     Write-Host ""
     Write-Host "$description"
@@ -304,7 +306,7 @@ function Get-UserMailboxPermssions {
 function Add-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $description = "Here you can add a new owner to one or more mailboxes. You can enter multiple`naddresses with one address on each line."
+        $description = "Here you can add a new owner to one or more mailboxes. Enter the mailbox where you`nwant to add the new owner. You can enter multiple addresses with one address on each`nline."
         Start-InputMenu
         $mailboxes = @()
         do {
@@ -360,7 +362,7 @@ function Add-Owner {
 function Switch-Owner {
     BEGIN{
         Test-ExchangeConnection
-        $description = "Enter the email address of the owner that you want to replace on one or more`nmailboxes. You can only enter one address"
+        $description = "Enter the email address of the owner that you want to replace on one or more`nmailboxes. You can enter only one address"
         Start-InputMenu       
         $old = (Read-Host "Enter an email address")
 
@@ -631,7 +633,7 @@ function Start-Tool {
                 pause
             }
             8 {
-                Write-Host "Still in development! Suggestions? Mail them to GitHub@visione.nl"
+                Write-Host "Still in development! Suggestions? Mail them to GitHub@visione.nl.`n`nMore information can you find on https://github.com/dhanssen93/OfficeTooling."
                 pause
             }
             Default {
